@@ -9,23 +9,23 @@
 ```mermaid
 sequenceDiagram
     autonumber
-    participant User as 📱 모바일 브라우저<br/>(index.html / app.js)
-    participant Server as ⚡ FastAPI 서버<br/>(main.py / WS /ws)
-    participant Gemini as 🤖 Gemini Live API<br/>(gemini-3.8-live / Avatar: Kira)
+    participant User as 모바일 브라우저 (index.html / app.js)
+    participant Server as FastAPI 서버 (main.py / WS)
+    participant Gemini as Gemini Live API (gemini-3.8-live / Kira)
 
-    User->>Server: WebSocket 연결 (/ws)
-    Server->>Gemini: client.aio.live.connect(model, LIVE_CONFIG)
-    Server-->>User: {"type": "status", "message": "연결됨 (아바타 준비 중...)"}
+    User->>Server: 1. WebSocket 연결 (/ws)
+    Server->>Gemini: 2. client.aio.live.connect(model, LIVE_CONFIG)
+    Server-->>User: 3. 상태 메시지 전달 (연결됨)
 
-    par 브라우저 → Gemini 실시간 전송
+    par 브라우저에서 Gemini로 실시간 전송
         User->>Server: 후면 카메라 1 FPS JPEG 프레임 (Base64)
-        Server->>Gemini: send_realtime_input(video=image/jpeg)
+        Server->>Gemini: send_realtime_input (image/jpeg)
         User->>Server: 마이크 음성 16kHz 16-bit PCM (Base64)
-        Server->>Gemini: send_realtime_input(audio=audio/pcm;rate=16000)
-    and Gemini → 브라우저 실시간 아바타 응답
-        Gemini-->>Server: 아바타 영상+음성 fMP4 청크 (video/mp4) + 입출력 자막
-        Server-->>User: {"type": "avatar_video" | "user_transcript" | "model_transcript"}
-        Note over User: MediaSource Extensions(MSE)로 PIP 아바타 실시간 재생<br/>(사용자 발화 감지 시 interrupt로 즉시 버퍼 스킵)
+        Server->>Gemini: send_realtime_input (audio/pcm 16kHz)
+    and Gemini에서 브라우저로 실시간 아바타 응답
+        Gemini-->>Server: 아바타 영상+음성 fMP4 청크 (video/mp4) 및 자막
+        Server-->>User: avatar_video / user_transcript / model_transcript 전달
+        Note over User: MediaSource Extensions(MSE)로 PIP 아바타 실시간 재생 (발화 감지 시 interrupt로 즉시 스킵)
     end
 ```
 
