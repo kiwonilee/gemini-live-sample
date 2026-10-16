@@ -49,13 +49,15 @@ gemini-live-sample/
 
 ---
 
+
 ## 3. 환경 변수 설정 (`.env`)
+
 
 프로젝트 루트에 `.env` 파일을 생성하고 인증 방식을 설정합니다.
 
 ```ini
 GOOGLE_GENAI_USE_VERTEXAI=TRUE
-GOOGLE_CLOUD_PROJECT=geap-sandbox-kwlee
+GOOGLE_CLOUD_PROJECT=[your-project-id]
 GOOGLE_CLOUD_LOCATION=us-central1
 ```
 
