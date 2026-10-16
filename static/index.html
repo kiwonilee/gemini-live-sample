@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Gemini Live 카메라 & 아바타 어시스턴트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #000;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* 전체 화면 카메라 뷰 */
+    #camera-preview {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+      background: #111;
+    }
+
+    /* 상단 상태 표시줄 */
+    .top-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(20, 20, 20, 0.75);
+      backdrop-filter: blur(6px);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #888;
+    }
+    .dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    /* =====================================================================
+     * [AVATAR 변경 1] 우측 상단 PIP(Picture-in-Picture) 아바타 비디오 영역 스타일
+     * - 9:16 세로 비율(120x214)로 카메라 화면 우측 상단에 아바타를 플로팅 표시합니다.
+     * ===================================================================== */
+    #avatar-box {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      width: 120px;
+      height: 214px;
+      border-radius: 16px;
+      overflow: hidden;
+      z-index: 15;
+      background: #1f2937;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+    #avatar-poster,
+    #avatar-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #avatar-poster.hidden {
+      display: none;
+    }
+    .avatar-label {
+      position: absolute;
+      bottom: 6px;
+      left: 8px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.65);
+      font-size: 11px;
+      font-weight: 600;
+      z-index: 2;
+    }
+
+    /* 하단 자막 및 버튼 영역 */
+    .bottom-panel {
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+      padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 60%, transparent);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .subtitle-box {
+      background: rgba(15, 15, 15, 0.72);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 12px 14px;
+      min-height: 76px;
+      max-height: 150px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .sub-user { color: #93c5fd; font-size: 13px; margin-bottom: 6px; }
+    .sub-model { color: #ffffff; font-weight: 500; }
+
+    #start-btn {
+      width: 100%;
+      padding: 15px 20px;
+      border: none;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 600;
+      background: #2563eb;
+      color: #fff;
+      cursor: pointer;
+    }
+    #start-btn.running { background: #dc2626; }
+  </style>
+</head>
+<body>
+  <video id="camera-preview" autoplay playsinline muted></video>
+  <canvas id="capture-canvas" style="display: none;"></canvas>
+
+  <div class="top-bar">
+    <div class="status-badge">
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text">대기 중</span>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       [AVATAR 변경 2] 실시간 아바타 영상(video/mp4)이 재생되는 PIP 컨테이너
+       - 주의: 아바타 비디오 스트림 안에 음성(Leda)이 포함되어 있으므로
+         #avatar-video에는 muted 속성을 넣지 않습니다.
+       ===================================================================== -->
+  <div id="avatar-box">
+    <img
+      id="avatar-poster"
+      src="https://www.gstatic.com/pantheon/images/aiplatform/vertex_ai_studio/avatars/kira.png"
+      alt="Kira Avatar"
+    />
+    <video id="avatar-video" autoplay playsinline></video>
+    <span class="avatar-label">Kira (Leda)</span>
+  </div>
+
+  <div class="bottom-panel">
+    <div class="subtitle-box">
+      <div id="user-transcript" class="sub-user">🎙️ 카메라로 사물이나 문제를 비추고 질문해 보세요.</div>
+      <div id="model-transcript" class="sub-model">시작하기를 누르면 카메라와 아바타가 연결됩니다.</div>
+    </div>
+    <button id="start-btn">🎙️ 시작하기</button>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
