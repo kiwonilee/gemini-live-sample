@@ -53,15 +53,12 @@ gemini-live-sample/
 ## 3. 환경 변수 설정 (`.env`)
 
 
-프로젝트 루트에 `.env.example` 를 참조하여 `.env` 파일을 생성하고 인증 방식을 설정합니다.
+프로젝트 루트에 `.env` 파일을 생성하고 인증 방식을 설정합니다.
 
 ```ini
 GOOGLE_GENAI_USE_VERTEXAI=TRUE
 GOOGLE_CLOUD_PROJECT=[your-project-id]
 GOOGLE_CLOUD_LOCATION=us-central1
-
-# 사용할 Live 모델 ID (기본값: gemini-3.8-live)
-GEMINI_MODEL=gemini-3.8-live
 ```
 
 > **참고**: 코드 내에서 아바타를 위해 변경된 모든 부분에는 `[AVATAR 변경]` 주석이 표시되어 있습니다.
@@ -74,12 +71,19 @@ GEMINI_MODEL=gemini-3.8-live
 Cloud Run 컨테이너가 `aiplatform.endpoints.predict` 를 호출할 수 있도록 전용 서비스 계정(`gemini-live-sa`)을 생성하고 최소 권한을 부여한 뒤 배포합니다.
 
 ### 1) 환경설정
+필요한 GCP API 활성화:
+```bash
+gcloud services enable run.googleapis.com \
+                       cloudbuild.googleapis.com \
+                       artifactregistry.googleapis.com \
+                       aiplatform.googleapis.com
+```
+
+필요한 환경 변수 정의:
 ```
 export PROJECT_ID=[your-project-id]
-```
-```
-export LOCATION=us-central1
-export SERVICE_ACCOUNT=gemini-live-sa
+export SERVICE_ACCOUNT=[service-account-for-app]
+export LOCATION=[location-for-app]
 ```
 
 ### 2) 전용 서비스 계정(SA) 생성 및 권한 설정
@@ -113,7 +117,7 @@ gcloud run deploy gemini-live-sample \
   --region=${LOCATION} \
   --service-account=${SA_EMAIL} \
   --allow-unauthenticated \
-  --set-env-vars=GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${LOCATION} \
+  --set-env-vars=GOOGLE_GENAI_USE_ENTERPRISE=TRUE,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GOOGLE_CLOUD_LOCATION=${LOCATION} \
   --timeout=3600 \
   --quiet
 ```
