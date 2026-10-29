@@ -52,17 +52,11 @@ gemini-live-sample/
 
 ## 3. 환경 변수 설정 (`.env`)
 
-
-프로젝트 루트에 `.env` 파일을 생성하고 인증 방식을 설정합니다.
-
-```ini
-GOOGLE_GENAI_USE_VERTEXAI=TRUE
-GOOGLE_CLOUD_PROJECT=[your-project-id]
-GOOGLE_CLOUD_LOCATION=us-central1
+```bash
+export PROJECT_ID=[your-project-id]
+export SERVICE_ACCOUNT=sa-gemini-live
+export LOCATION=us-central1
 ```
-
-> **참고**: 코드 내에서 아바타를 위해 변경된 모든 부분에는 `[AVATAR 변경]` 주석이 표시되어 있습니다.
-> - **내장 아바타 변경 (`main.py`)**: `LIVE_CONFIG`의 `avatar_config=types.AvatarConfig(avatar_name="Kira")`에서 `"Kira"`, `"Ingrid"`, `"Vera"`, `"Carmen"`, `"Piper"`, `"Sam"`, `"Jay"`, `"Paul"`, `"Ben"`, `"Kai"`, `"Leo"` 중 원하는 이름으로 변경할 수 있습니다.
 
 ---
 
@@ -79,12 +73,6 @@ gcloud services enable run.googleapis.com \
                        aiplatform.googleapis.com
 ```
 
-필요한 환경 변수 정의:
-```
-export PROJECT_ID=[your-project-id]
-export SERVICE_ACCOUNT=[service-account-for-app]
-export LOCATION=[location-for-app]
-```
 
 ### 2) 전용 서비스 계정(SA) 생성 및 권한 설정
 ```bash
